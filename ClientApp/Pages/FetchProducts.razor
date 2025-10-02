@@ -28,7 +28,7 @@
         try
         {
             using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10));
-            HttpResponseMessage response = await HttpClient.GetAsync("http://localhost:5277/api/products", cts.Token);
+            HttpResponseMessage response = await HttpClient.GetAsync("http://localhost:5277/api/productlist", cts.Token);
 
             if (!response.IsSuccessStatusCode)
             {

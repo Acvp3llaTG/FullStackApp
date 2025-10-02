@@ -18,7 +18,7 @@ app.UseCors("cors");
 
 
 
-app.MapGet("/api/products", () =>
+app.MapGet("/api/productlist", () =>
 
 {
 
