@@ -20,8 +20,8 @@
 </ul>
 
 @code {
-    public List<Product> products { get; set; }
-    public string errorMessage { get; set; }
+    public List<Product>? products { get; set; }
+    public string? errorMessage { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -82,7 +82,7 @@
     public class Product
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public double Price { get; set; }
         public int Stock { get; set; }
     }
