@@ -1,4 +1,4 @@
-# Copilot Assistance Summary for the SmartShop Blazor Project
+# Copilot Assistance Summary for the InventoryHub Blazor Project
 
 ## Step 1: Data Modeling and Initial API Integration
 
