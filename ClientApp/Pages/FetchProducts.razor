@@ -1,27 +1,49 @@
 ﻿@page "/fetchproducts"
-
 @inject HttpClient HttpClient
 @inject JsonSerializerOptions JsonSerializerOptions
 
 <h3>Product List</h3>
 
-<ul>
-   @if (products != null)
-    {
-        foreach (var product in products)
-        {
-            <li>@product.Name - $@product.Price</li>
-        }
-    }
-    else
-    {
-        <li>Loading...</li>
-    }
-</ul>
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-danger">@ErrorMessage</div>
+}
+else if (Products == null)
+{
+    <p>Loading products...</p>
+}
+else if (Products.Count == 0)
+{
+    <p>No products found.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock Level</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in Products)
+            {
+                <tr>
+                    <td>@product.Name</td>
+                    <td>@product.Category?.Name</td>
+                    <td>@product.Price</td>
+                    <td>@product.Stock</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 @code {
-    public List<Product>? products { get; set; }
-    public string? errorMessage { get; set; }
+    public List<Product>? Products { get; set; }
+    public string? ErrorMessage { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -32,8 +54,8 @@
 
             if (!response.IsSuccessStatusCode)
             {
-                errorMessage = $"API returned error: {(int)response.StatusCode} {response.ReasonPhrase}";
-                this.products = new global::System.Collections.Generic.List<global::ClientApp.Pages.FetchProducts.Product>();
+                ErrorMessage = $"API returned error: {(int)response.StatusCode} {response.ReasonPhrase}";
+                Products = new List<Product>();
                 return;
             }
 
@@ -41,8 +63,8 @@
 
             if (string.IsNullOrWhiteSpace(jsonString))
             {
-                errorMessage = "API returned an empty response.";
-                this.products = new global::System.Collections.Generic.List<global::ClientApp.Pages.FetchProducts.Product>();
+                ErrorMessage = "API returned an empty response.";
+                Products = new List<Product>();
                 return;
             }
 
@@ -50,32 +72,32 @@
 
             if (products is null)
             {
-                errorMessage = "Failed to parse products from API response.";
-                this.products = new global::System.Collections.Generic.List<global::ClientApp.Pages.FetchProducts.Product>();
+                ErrorMessage = "Failed to parse products from API response.";
+                Products = new List<Product>();
                 return;
             }
 
-            this.products = products;
+            Products = products;
         }
         catch (TaskCanceledException)
         {
-            errorMessage = "The request timed out. Please try again later.";
-            products = new List<Product>();
+            ErrorMessage = "The request timed out. Please try again later.";
+            Products = new List<Product>();
         }
         catch (HttpRequestException httpEx)
         {
-            errorMessage = $"Network error: {httpEx.Message}";
-            products = new List<Product>();
+            ErrorMessage = $"Network error: {httpEx.Message}";
+            Products = new List<Product>();
         }
         catch (JsonException jsonEx)
         {
-            errorMessage = $"Error parsing API response: {jsonEx.Message}";
-            products = new List<Product>();
+            ErrorMessage = $"Error parsing API response: {jsonEx.Message}";
+            Products = new List<Product>();
         }
         catch (Exception ex)
         {
-            errorMessage = $"Unexpected error: {ex.Message}";
-            products = new List<Product>();
+            ErrorMessage = $"Unexpected error: {ex.Message}";
+            Products = new List<Product>();
         }
     }
 
@@ -83,7 +105,14 @@
     {
         public int Id { get; set; }
         public string? Name { get; set; }
-        public decimal Price { get; set; }
+        public double Price { get; set; }
         public int Stock { get; set; }
+        public CategoryInfo? Category { get; set; }
+    }
+
+    public class CategoryInfo
+    {
+        public int Id { get; set; }
+        public string? Name { get; set; }
     }
 }
