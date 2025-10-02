@@ -1,0 +1,89 @@
+﻿@page "/fetchproducts"
+
+@inject HttpClient HttpClient
+@inject JsonSerializerOptions JsonSerializerOptions
+
+<h3>Product List</h3>
+
+<ul>
+   @if (products != null)
+    {
+        foreach (var product in products)
+        {
+            <li>@product.Name - $@product.Price</li>
+        }
+    }
+    else
+    {
+        <li>Loading...</li>
+    }
+</ul>
+
+@code {
+    public List<Product> products { get; set; }
+    public string errorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10));
+            HttpResponseMessage response = await HttpClient.GetAsync("http://localhost:5277/api/products", cts.Token);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                errorMessage = $"API returned error: {(int)response.StatusCode} {response.ReasonPhrase}";
+                this.products = new global::System.Collections.Generic.List<global::ClientApp.Pages.FetchProducts.Product>();
+                return;
+            }
+
+            string jsonString = await response.Content.ReadAsStringAsync(cts.Token);
+
+            if (string.IsNullOrWhiteSpace(jsonString))
+            {
+                errorMessage = "API returned an empty response.";
+                this.products = new global::System.Collections.Generic.List<global::ClientApp.Pages.FetchProducts.Product>();
+                return;
+            }
+
+            var products = JsonSerializer.Deserialize<List<Product>>(jsonString, JsonSerializerOptions);
+
+            if (products is null)
+            {
+                errorMessage = "Failed to parse products from API response.";
+                this.products = new global::System.Collections.Generic.List<global::ClientApp.Pages.FetchProducts.Product>();
+                return;
+            }
+
+            this.products = products;
+        }
+        catch (TaskCanceledException)
+        {
+            errorMessage = "The request timed out. Please try again later.";
+            products = new List<Product>();
+        }
+        catch (HttpRequestException httpEx)
+        {
+            errorMessage = $"Network error: {httpEx.Message}";
+            products = new List<Product>();
+        }
+        catch (JsonException jsonEx)
+        {
+            errorMessage = $"Error parsing API response: {jsonEx.Message}";
+            products = new List<Product>();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Unexpected error: {ex.Message}";
+            products = new List<Product>();
+        }
+    }
+
+    public class Product
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public double Price { get; set; }
+        public int Stock { get; set; }
+    }
+}
